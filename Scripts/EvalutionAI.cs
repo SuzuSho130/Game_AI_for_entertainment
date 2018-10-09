@@ -11,8 +11,11 @@ public class EvalutionAI : MonoBehaviour {
 	private float hp=0.0f;
 	private int dir=1;
 	private float threshold = 0.1f; //技判定
+	private int next_command=-1;
 
 	public int distance_threshold; //距離差
+	public int max_distance;
+	public int min_distance;
 	public int hp_threshold;
 //	public int high_distance;
 //	public int low_distance;
@@ -77,15 +80,26 @@ public class EvalutionAI : MonoBehaviour {
 	public int Select_Action() {
 		hp = Mathf.Abs (_enemy_controller.GetHP() - _player_controller.GetHP());
 		dis = Mathf.Abs (Player2.transform.position.x - transform.position.x);
-		Debug.Log (dis);
+//		Debug.Log (dis);
 		if (Fork_Distance()) { //近距離
+			if (next_command != -1) {
+				int temp = next_command;
+				next_command = -1;
+				return temp;
+			}
 			return Short_Distance_Action();
 		} else { //遠距離
+			if (next_command != -1) {
+				int temp = next_command;
+				next_command = -1;
+				return temp;
+			}
 			return Long_Distance_Action();
 		}
 	}
 
 	private int Move() {
+		Debug.Log (dis);
 		int difference_hp = _enemy_controller.GetHP() - _player_controller.GetHP ();
 		if (difference_hp >= (hp_threshold - 50) / 5) {
 			if (Player2.transform.position.x - transform.position.x > 0) {
@@ -104,37 +118,64 @@ public class EvalutionAI : MonoBehaviour {
 
 
 	private int Short_Distance_Action() {
-		float check = 0;
-		for(int i=0;i<6;i++) {
+		float check;
+		float pre_check = 1.0f;
+		int number=0;
+		for(int i=0;i<4;i++) {
 			check = Mathf.Abs (dis * dir + short_dis_state [GetState()] / 100) / 2.0f - short_dis_judge [i] / 100.0f;
-//			Debug.Log ("Short");
-//			Debug.Log(Mathf.Abs (dis * dir + state [GetState()] / 100) / 2.0f - judge [i] / 100.0f);
+			if (pre_check < check) {
+				number = i;
+			}
+			//			Debug.Log(Mathf.Abs (dis * dir + state [GetState()] / 100) / 2.0f - judge [i] / 100.0f);
 			if (threshold >= Mathf.Abs (check)) {
 				if (Player2.transform.position.x - transform.position.x > 0 && !_enemy_controller.GetDirect()) {
+					next_command = i;
 					return 4;
 				} else if(Player2.transform.position.x - transform.position.x < 0 && _enemy_controller.GetDirect())  {
+					next_command = i;
 					return 5;
 				}
 				return i;
 			}
+		}
+		if(dis<min_distance/100) {
+			if (Player2.transform.position.x - transform.position.x > 0 && !_enemy_controller.GetDirect ()) {
+				next_command = Random.Range (0, 5);
+				return 4;
+			} else if (Player2.transform.position.x - transform.position.x < 0 && _enemy_controller.GetDirect ()) {
+				next_command = Random.Range (0, 5);
+				return 5;
+			}
+			return Random.Range (0, 5);;
 		}
 		return Move ();
 	}
 
 	private int Long_Distance_Action() {
 		float check;
-		for(int i=0;i<6;i++) {
+		for(int i=0;i<4;i++) {
 			check = Mathf.Abs (dis * dir + long_dis_state [GetState()] / 100) / 2.0f - long_dis_judge [i] / 100.0f;
-//			Debug.Log ("Long");
-//			Debug.Log(Mathf.Abs (dis * dir + state [GetState()] / 100) / 2.0f - judge [i] / 100.0f);
+			//			Debug.Log(Mathf.Abs (dis * dir + state [GetState()] / 100) / 2.0f - judge [i] / 100.0f);
 			if (threshold >= Mathf.Abs (check)) {
 				if (Player2.transform.position.x - transform.position.x > 0 && !_enemy_controller.GetDirect()) {
+					next_command = i;
 					return 4;
 				} else if(Player2.transform.position.x - transform.position.x < 0 && _enemy_controller.GetDirect())  {
+					next_command = i;
 					return 5;
 				}
 				return i;
 			}
+		}
+		if(dis>max_distance/10) {
+			if (Player2.transform.position.x - transform.position.x > 0 && !_enemy_controller.GetDirect ()) {
+				next_command = Random.Range (1, 3);
+				return 4;
+			} else if (Player2.transform.position.x - transform.position.x < 0 && _enemy_controller.GetDirect ()) {
+				next_command = Random.Range (1, 3);
+				return 5;
+			}
+			return Random.Range (1, 3);
 		}
 		return Move ();
 	}

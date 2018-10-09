@@ -12,6 +12,8 @@ public class AI : MonoBehaviour {
 	private float threshold = 0.1f; //技判定
 
 	public int distance_threshold; //距離差
+	public int max_distance;
+	public int min_distance;
 	public int hp_threshold;
 	public int[] short_dis_judge = new int[6]; //各技判定
 	public int[] long_dis_judge = new int[6]; //各技判定
@@ -99,8 +101,13 @@ public class AI : MonoBehaviour {
 
 	private int Short_Distance_Action() {
 		float check;
+		float pre_check = 1.0f;
+		int number=0;
 		for(int i=0;i<6;i++) {
 			check = Mathf.Abs (dis * dir + short_dis_state [GetState()] / 100) / 2.0f - short_dis_judge [i] / 100.0f;
+			if (pre_check < check) {
+				number = i;
+			}
 			//			Debug.Log(Mathf.Abs (dis * dir + state [GetState()] / 100) / 2.0f - judge [i] / 100.0f);
 			if (threshold >= Mathf.Abs (check)) {
 				if (Player1.transform.position.x - transform.position.x > 0 && !_enemy_controller.GetDirect()) {
@@ -110,6 +117,9 @@ public class AI : MonoBehaviour {
 				}
 				return i;
 			}
+		}
+		if(dis<min_distance/100) {
+			return number;
 		}
 		return Move ();
 	}
@@ -127,6 +137,9 @@ public class AI : MonoBehaviour {
 				}
 				return i;
 			}
+		}
+		if(dis>max_distance/10) {
+			return Random.Range (2, 3);
 		}
 		return Move ();
 	}
